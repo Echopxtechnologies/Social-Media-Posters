@@ -773,4 +773,162 @@ private function _post_to_platform($platform, $connection, $message, $link = nul
         echo "\nTo process these posts, run the cron URL with the secret parameter.\n";
         echo "</pre>";
     }
+
+    /**
+ * Check specific post details
+ */
+public function check_instagram_post($media_id)
+{
+    if (!is_admin()) {
+        show_404();
+    }
+    
+    $connection = $this->sm_posters_model->get_connection('instagram', 1);
+    
+    if (!$connection) {
+        echo "No connection";
+        return;
+    }
+    
+    echo "<h2>📸 Instagram Post Details</h2>";
+    
+    // Get detailed post info
+    $url = 'https://graph.facebook.com/v18.0/' . $media_id . '?fields=id,media_type,media_url,thumbnail_url,permalink,caption,timestamp,like_count,comments_count,is_comment_enabled,media_product_type&access_token=' . $connection->access_token;
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    echo "<h3>API Response (HTTP {$http_code}):</h3>";
+    echo "<pre>" . htmlspecialchars($response) . "</pre>";
+    
+    $result = json_decode($response, true);
+    
+    if (isset($result['permalink'])) {
+        echo "<div style='background: #d4edda; padding: 20px; margin: 20px 0; border-radius: 5px;'>";
+        echo "<h3>✅ Post Found!</h3>";
+        echo "<strong>Post ID:</strong> " . $result['id'] . "<br>";
+        echo "<strong>Type:</strong> " . $result['media_type'] . "<br>";
+        echo "<strong>Posted:</strong> " . $result['timestamp'] . "<br>";
+        echo "<strong>Product Type:</strong> " . ($result['media_product_type'] ?? 'N/A') . "<br>";
+        echo "<br>";
+        echo "<strong>🔗 Direct Link:</strong> <a href='" . $result['permalink'] . "' target='_blank' style='color: blue; font-size: 18px;'>" . $result['permalink'] . "</a><br>";
+        echo "<br>";
+        
+        if (isset($result['media_url'])) {
+            echo "<img src='" . $result['media_url'] . "' style='max-width: 300px; border: 2px solid #ddd; border-radius: 5px;'>";
+        }
+        
+        echo "</div>";
+        
+        echo "<div style='background: #fff3cd; padding: 15px; border-radius: 5px;'>";
+        echo "<strong>⚠️ If you can't see this on your profile:</strong><br>";
+        echo "1. The post may be pending review by Instagram<br>";
+        echo "2. Your account might need to be verified<br>";
+        echo "3. The post might be in 'Content you shared' instead of main feed<br>";
+        echo "4. Try clicking the permalink above to view it directly<br>";
+        echo "</div>";
+    }
+}
+
+
+    public function debug_instagram()
+{
+    if (!is_admin()) {
+        show_404();
+    }
+    
+    // Get your Instagram connection
+    $connection = $this->sm_posters_model->get_connection('instagram', 1);
+    
+    if (!$connection) {
+        echo "<h2>❌ No Instagram connection found</h2>";
+        return;
+    }
+    
+    echo "<h2>🔍 Instagram Connection Debug</h2>";
+    echo "<div style='background: #f5f5f5; padding: 20px; border-radius: 5px; font-family: monospace;'>";
+    
+    echo "<h3>Database Info:</h3>";
+    echo "<strong>Account ID:</strong> " . $connection->account_id . "<br>";
+    echo "<strong>Account Name:</strong> " . $connection->account_name . "<br>";
+    echo "<strong>Client:</strong> " . ($connection->company ?? 'N/A') . "<br>";
+    echo "<br>";
+    
+    // Get actual Instagram account info from API
+    $url = 'https://graph.facebook.com/v18.0/' . $connection->account_id . '?fields=id,username,name,profile_picture_url&access_token=' . $connection->access_token;
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    
+    $response = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    echo "<h3>API Response (HTTP {$http_code}):</h3>";
+    echo "<pre>" . htmlspecialchars($response) . "</pre>";
+    
+    $result = json_decode($response, true);
+    
+    if (isset($result['username'])) {
+        echo "<div style='background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;'>";
+        echo "<h3>✅ Connected Instagram Account:</h3>";
+        echo "<strong>Username:</strong> @" . $result['username'] . "<br>";
+        echo "<strong>Name:</strong> " . $result['name'] . "<br>";
+        echo "<strong>Account ID:</strong> " . $result['id'] . "<br>";
+        echo "<br>";
+        echo "<strong>🔗 View Profile:</strong> <a href='https://instagram.com/" . $result['username'] . "' target='_blank'>https://instagram.com/" . $result['username'] . "</a><br>";
+        echo "</div>";
+        
+        // Get recent media
+        echo "<h3>Recent Posts:</h3>";
+        $media_url = 'https://graph.facebook.com/v18.0/' . $connection->account_id . '/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&access_token=' . $connection->access_token;
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $media_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        $media_response = curl_exec($ch);
+        curl_close($ch);
+        
+        $media_result = json_decode($media_response, true);
+        
+        if (isset($media_result['data']) && count($media_result['data']) > 0) {
+            echo "<table border='1' cellpadding='10' style='border-collapse: collapse; width: 100%;'>";
+            echo "<tr><th>Post ID</th><th>Caption</th><th>Type</th><th>Posted</th><th>Link</th></tr>";
+            
+            foreach ($media_result['data'] as $post) {
+                echo "<tr>";
+                echo "<td>" . $post['id'] . "</td>";
+                echo "<td>" . substr($post['caption'] ?? 'N/A', 0, 50) . "...</td>";
+                echo "<td>" . $post['media_type'] . "</td>";
+                echo "<td>" . date('Y-m-d H:i', strtotime($post['timestamp'])) . "</td>";
+                echo "<td><a href='" . $post['permalink'] . "' target='_blank'>View</a></td>";
+                echo "</tr>";
+            }
+            
+            echo "</table>";
+        } else {
+            echo "<p>No posts found or error: <pre>" . htmlspecialchars($media_response) . "</pre></p>";
+        }
+        
+    } else {
+        echo "<div style='background: #f8d7da; padding: 15px; border-radius: 5px;'>";
+        echo "<h3>❌ Error:</h3>";
+        echo "<pre>" . htmlspecialchars($response) . "</pre>";
+        echo "</div>";
+    }
+    
+    echo "</div>";
+}
+
+
 }
