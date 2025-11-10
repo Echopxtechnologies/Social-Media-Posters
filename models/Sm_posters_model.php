@@ -735,7 +735,17 @@ class Sm_posters_model extends App_Model
                     return $CI->linkedin_model->post_to_linkedin($connection, $message, $link, $media_path);
                 
                 case 'tumblr':
-                    return $CI->tumblr_model->post_to_tumblr($connection, $message, $media_path);
+                // CRITICAL FIX: Tumblr requires credentials array with blog_name
+                $tumblr_credentials = [
+                    'consumer_key' => $connection->consumer_key,
+                    'consumer_secret' => $connection->consumer_secret,
+                    'oauth_token' => $connection->oauth_token,
+                    'oauth_token_secret' => $connection->oauth_token_secret,
+                    'blog_name' => $connection->account_id  // Map account_id to blog_name
+                ];
+                
+                $media = !empty($media_path) ? [$media_path] : [];
+                return $CI->tumblr_model->post_to_tumblr($tumblr_credentials, $message, $media);
                 
                 case 'pinterest':
                     return $CI->pinterest_model->post_to_pinterest($connection, $message, $link, $media_path);

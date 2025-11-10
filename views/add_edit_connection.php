@@ -372,67 +372,73 @@ var platformFields = {
     },
 
     tumblr: {
-        name: 'Tumblr',
-        color: '#35465C',
-        fields: [
-            {
-                name: 'account_id',
-                label: 'Blog Hostname',
-                type: 'text',
-                placeholder: 'myblog.tumblr.com',
-                required: true,
-                help: 'Your Tumblr blog URL'
-            },
-            {
-                name: 'account_name',
-                label: 'Account Name (Optional)',
-                type: 'text',
-                placeholder: 'e.g., My Tumblr Blog',
-                required: false
-            },
-            {
-                name: 'api_key',
-                label: 'Consumer Key',
-                type: 'text',
-                placeholder: 'OAuth Consumer Key',
-                required: true,
-                help: 'From Tumblr Apps'
-            },
-            {
-                name: 'api_secret',
-                label: 'Consumer Secret',
-                type: 'text',
-                placeholder: 'OAuth Consumer Secret',
-                required: true,
-                help: 'From Tumblr Apps'
-            },
-            {
-                name: 'access_token',
-                label: 'OAuth Token',
-                type: 'text',
-                placeholder: 'OAuth 1.0a access token',
-                required: true
-            },
-            {
-                name: 'access_token_secret',
-                label: 'OAuth Token Secret',
-                type: 'text',
-                placeholder: 'OAuth token secret',
-                required: true
-            }
-        ],
-        instructions: `
-            <h5><i class="fa fa-tumblr"></i> Tumblr Setup Instructions</h5>
-            <ol>
-                <li>Go to <a href="https://www.tumblr.com/oauth/apps" target="_blank">Tumblr Apps</a></li>
-                <li>Register your application</li>
-                <li>Note Consumer Key and Secret</li>
-                <li>Implement OAuth 1.0a flow to get user authorization</li>
-                <li>Exchange for Access Token and Token Secret</li>
-            </ol>
-            <p class="text-info"><i class="fa fa-info-circle"></i> <strong>Post Types:</strong> Text, Photo, Quote, Link, Video, Audio, Chat</p>
-        `
-    },
+    name: 'Tumblr',
+    color: '#35465C',
+    fields: [
+        {
+            name: 'account_id',
+            label: 'Blog Hostname',
+            type: 'text',
+            placeholder: 'example.tumblr.com',
+            required: true,
+            help: 'Enter your Tumblr blog hostname (without https://).'
+        },
+        {
+            name: 'account_name',
+            label: 'Profile Display Name',
+            type: 'text',
+            placeholder: 'Optional Name (ex: Travel Stories)',
+            required: false,
+            help: 'This is just for identifying the account inside the system.'
+        },
+        {
+            name: 'consumer_key',
+            label: 'Consumer Key (API Key)',
+            type: 'text',
+            placeholder: 'Enter your Tumblr API Key',
+            required: true,
+            help: 'You will get this from Tumblr Developer Dashboard.'
+        },
+        {
+            name: 'consumer_secret',
+            label: 'Consumer Secret (API Secret)',
+            type: 'text',
+            placeholder: 'Enter your Tumblr API Secret',
+            required: true,
+        },
+        {
+            name: 'oauth_token',
+            label: 'Access Token',
+            type: 'text',
+            placeholder: 'OAuth Access Token',
+            required: true,
+        },
+        {
+            name: 'oauth_token_secret',
+            label: 'Access Token Secret',
+            type: 'text',
+            placeholder: 'OAuth Access Token Secret',
+            required: true,
+        }
+    ],
+    instructions: `
+        <h5><i class="fa fa-tumblr"></i> How to Connect Tumblr</h5>
+        <ol>
+            <li>Visit <a href="https://www.tumblr.com/oauth/apps" target="_blank">https://www.tumblr.com/oauth/apps</a></li>
+            <li>Create a new application or open an existing one</li>
+            <li>Copy the <strong>Consumer Key</strong> and <strong>Consumer Secret</strong></li>
+            <li>Use OAuth 1.0 authorization to generate:
+                <ul>
+                    <li>Access Token</li>
+                    <li>Access Token Secret</li>
+                </ul>
+            </li>
+            <li>Enter all credentials here and save</li>
+        </ol>
+        <p class="text-info"><i class="fa fa-info-circle"></i> Supported post formats include Text, Photo, Video, Quote, Link, and Chat.</p>
+    `
+},
+
 
     pinterest: {
         name: 'Pinterest',

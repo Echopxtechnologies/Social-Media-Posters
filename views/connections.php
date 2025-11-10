@@ -94,7 +94,7 @@
                                                            title="Toggle Status">
                                                             <i class="fa fa-power-off"></i>
                                                         </a>
-                                                        <a href="<?php echo admin_url('sm_posters/delete_connection/' . $conn->id); ?>" 
+                                                        <a href="<?php echo admin_url('sm_posters/delete_connection/' .$conn->platform.'/' . $conn->id); ?>" 
                                                            class="btn btn-danger btn-sm _delete"
                                                            title="Delete">
                                                             <i class="fa fa-trash"></i>

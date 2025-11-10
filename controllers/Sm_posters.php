@@ -75,7 +75,6 @@ class Sm_posters extends AdminController
             // Platform-specific validation rules
             switch ($platform) {
                 case 'x':
-                    // X needs multiple credentials
                     $this->form_validation->set_rules('api_key', 'API Key', 'required');
                     $this->form_validation->set_rules('api_secret', 'API Secret', 'required');
                     $this->form_validation->set_rules('access_token', 'Access Token', 'required');
@@ -83,9 +82,11 @@ class Sm_posters extends AdminController
                     break;
                 
                 case 'tumblr':
-                    // Tumblr uses OAuth 1.0a
-                    $this->form_validation->set_rules('access_token', 'Access Token', 'required');
-                    $this->form_validation->set_rules('access_token_secret', 'Access Token Secret', 'required');
+                    // Tumblr uses OAuth 1.0a - ALL fields required
+                    $this->form_validation->set_rules('consumer_key', 'Consumer Key', 'required');
+                    $this->form_validation->set_rules('consumer_secret', 'Consumer Secret', 'required');
+                    $this->form_validation->set_rules('oauth_token', 'OAuth Token', 'required');
+                    $this->form_validation->set_rules('oauth_token_secret', 'OAuth Token Secret', 'required');
                     break;
                 
                 default:
@@ -113,8 +114,10 @@ class Sm_posters extends AdminController
                         break;
                     
                     case 'tumblr':
-                        $data['access_token'] = $this->input->post('access_token');
-                        $data['access_token_secret'] = $this->input->post('access_token_secret');
+                        $data['consumer_key'] = $this->input->post('consumer_key');
+                        $data['consumer_secret'] = $this->input->post('consumer_secret');
+                        $data['oauth_token'] = $this->input->post('oauth_token');
+                        $data['oauth_token_secret'] = $this->input->post('oauth_token_secret');
                         break;
                     
                     default:
@@ -139,14 +142,13 @@ class Sm_posters extends AdminController
         $data['title'] = 'Add Social Media Connection';
         $data['clients'] = $this->clients_model->get();
         $data['connection'] = null;
-        $data['platform'] = ''; // Empty for new connection
+        $data['platform'] = '';
         
         $this->load->view('sm_posters/add_edit_connection', $data);
     }
     
     /**
      * Edit Connection
-     * URL format: sm_posters/edit_connection/{platform}/{id}
      */
     public function edit_connection($platform, $id)
     {
@@ -154,7 +156,6 @@ class Sm_posters extends AdminController
             access_denied('sm_posters');
         }
 
-        // Get connection from correct platform table
         $connection = $this->sm_posters_model->get_connection($platform, $id);
 
         if (!$connection) {
@@ -162,7 +163,6 @@ class Sm_posters extends AdminController
         }
 
         if ($this->input->post()) {
-            // Validate
             $this->form_validation->set_rules('client_id', 'Client', 'required');
             $this->form_validation->set_rules('account_id', 'Account ID', 'required');
 
@@ -176,8 +176,10 @@ class Sm_posters extends AdminController
                     break;
                 
                 case 'tumblr':
-                    $this->form_validation->set_rules('access_token', 'Access Token', 'required');
-                    $this->form_validation->set_rules('access_token_secret', 'Access Token Secret', 'required');
+                    $this->form_validation->set_rules('consumer_key', 'Consumer Key', 'required');
+                    $this->form_validation->set_rules('consumer_secret', 'Consumer Secret', 'required');
+                    $this->form_validation->set_rules('oauth_token', 'OAuth Token', 'required');
+                    $this->form_validation->set_rules('oauth_token_secret', 'OAuth Token Secret', 'required');
                     break;
                 
                 default:
@@ -186,7 +188,6 @@ class Sm_posters extends AdminController
             }
 
             if ($this->form_validation->run() == TRUE) {
-                // Build data array
                 $data = [
                     'client_id' => $this->input->post('client_id'),
                     'account_name' => $this->input->post('account_name'),
@@ -194,7 +195,6 @@ class Sm_posters extends AdminController
                     'status' => $this->input->post('status') ? 1 : 0,
                 ];
 
-                // Add platform-specific fields
                 switch ($platform) {
                     case 'x':
                         $data['api_key'] = $this->input->post('api_key');
@@ -204,8 +204,10 @@ class Sm_posters extends AdminController
                         break;
                     
                     case 'tumblr':
-                        $data['access_token'] = $this->input->post('access_token');
-                        $data['access_token_secret'] = $this->input->post('access_token_secret');
+                        $data['consumer_key'] = $this->input->post('consumer_key');
+                        $data['consumer_secret'] = $this->input->post('consumer_secret');
+                        $data['oauth_token'] = $this->input->post('oauth_token');
+                        $data['oauth_token_secret'] = $this->input->post('oauth_token_secret');
                         break;
                     
                     default:
@@ -215,7 +217,6 @@ class Sm_posters extends AdminController
                         break;
                 }
 
-                // Update connection
                 $result = $this->sm_posters_model->update_connection($platform, $id, $data);
 
                 if ($result) {
@@ -237,7 +238,6 @@ class Sm_posters extends AdminController
     
     /**
      * Delete Connection
-     * URL format: sm_posters/delete_connection/{platform}/{id}
      */
     public function delete_connection($platform, $id)
     {
@@ -258,7 +258,6 @@ class Sm_posters extends AdminController
     
     /**
      * Toggle Connection Status
-     * URL format: sm_posters/toggle_connection/{platform}/{id}
      */
     public function toggle_connection($platform, $id)
     {
@@ -293,8 +292,8 @@ class Sm_posters extends AdminController
             if ($this->form_validation->run() == TRUE) {
                 $message = $this->input->post('message');
                 $link = $this->input->post('link');
-                $platforms = $this->input->post('platforms'); // Array of platform names
-                $connections = $this->input->post('connections'); // Array: platform => connection_id
+                $platforms = $this->input->post('platforms');
+                $connections = $this->input->post('connections');
                 $schedule_type = $this->input->post('schedule_type');
                 
                 $media_base64 = $this->input->post('media_base64');
@@ -317,9 +316,8 @@ class Sm_posters extends AdminController
                     }
                     
                     $scheduled_at = $scheduled_date . ' ' . $scheduled_time . ':00';
-                    
-                    // Validate datetime
                     $timestamp = strtotime($scheduled_at);
+                    
                     if ($timestamp === false) {
                         set_alert('danger', 'Invalid date/time format');
                         redirect(admin_url('sm_posters/create_post'));
@@ -334,8 +332,6 @@ class Sm_posters extends AdminController
                 if (!empty($connections)) {
                     $first_platform = reset(array_keys($connections));
                     $first_connection_id = $connections[$first_platform];
-                    
-                    // Get connection from correct platform table
                     $first_conn = $this->sm_posters_model->get_connection($first_platform, $first_connection_id);
                     $client_id = $first_conn ? $first_conn->client_id : 0;
                 }
@@ -378,7 +374,7 @@ class Sm_posters extends AdminController
                     redirect(admin_url('sm_posters/posts'));
                 }
 
-                // Post immediately to all selected platforms
+                // Post immediately
                 $results = [];
                 $success_platforms = [];
                 $failed_platforms = [];
@@ -389,8 +385,6 @@ class Sm_posters extends AdminController
                     }
                     
                     $connection_id = $connections[$platform];
-                    
-                    // Get connection from correct platform table
                     $connection = $this->sm_posters_model->get_connection($platform, $connection_id);
                     
                     if (!$connection || $connection->status != 1) {
@@ -434,14 +428,13 @@ class Sm_posters extends AdminController
 
                 // Update main post status
                 $all_failed = !empty($results) && count(array_filter($results, function($r) { return $r['success']; })) == 0;
-                $all_success = !empty($results) && count(array_filter($results, function($r) { return !$r['success']; })) == 0;
                 
                 $this->sm_posters_model->update_post($post_id, [
                     'status' => $all_failed ? 'failed' : 'published',
                     'published_at' => date('Y-m-d H:i:s')
                 ]);
 
-                // Show detailed results
+                // Show results
                 if (!empty($success_platforms)) {
                     set_alert('success', 'Posted successfully to: ' . implode(', ', $success_platforms));
                     log_activity('Posted to ' . count($success_platforms) . ' social media platform(s)');
@@ -460,110 +453,119 @@ class Sm_posters extends AdminController
         
         $this->load->view('sm_posters/create_post', $data);
     }
-/**
- * Route to correct platform model for posting
- * 
- * @param string $platform
- * @param object $connection Connection object from platform-specific table
- * @param string $message Post message/content
- * @param string|null $link Optional link to include
- * @param string|null $media_path Optional media file path
- * @return array ['success' => bool, 'post_id' => string|null, 'error' => string|null]
- */
-private function _post_to_platform($platform, $connection, $message, $link = null, $media_path = null)
-{
-    try {
-        $result = null;
-        
-        switch ($platform) {
-            case 'facebook':
-                $result = $this->facebook_model->_post_to_facebook($connection, $message, $link, $media_path);
-                break;
+
+    /**
+     * Route to correct platform model for posting
+     */
+    private function _post_to_platform($platform, $connection, $message, $link = null, $media_path = null)
+    {
+        try {
+            $result = null;
             
-            case 'instagram':
-                $result = $this->instagram_model->post_to_instagram($connection, $message, $media_path);
-                break;
-            
-            case 'x':
-                // X requires credentials in specific array format
-                if (!isset($connection->api_key) || !isset($connection->api_secret) || 
-                    !isset($connection->access_token) || !isset($connection->access_token_secret)) {
+            switch ($platform) {
+                case 'facebook':
+                    $result = $this->facebook_model->_post_to_facebook($connection, $message, $link, $media_path);
+                    break;
+                
+                case 'instagram':
+                    $result = $this->instagram_model->post_to_instagram($connection, $message, $media_path);
+                    break;
+                
+                case 'x':
+                    if (!isset($connection->api_key) || !isset($connection->api_secret) || 
+                        !isset($connection->access_token) || !isset($connection->access_token_secret)) {
+                        return [
+                            'success' => false,
+                            'post_id' => null,
+                            'error' => 'Missing required X credentials'
+                        ];
+                    }
+                    
+                    $credentials = [
+                        'api_key' => $connection->api_key,
+                        'api_secret' => $connection->api_secret,
+                        'access_token' => $connection->access_token,
+                        'access_token_secret' => $connection->access_token_secret
+                    ];
+                    
+                    $media = !empty($media_path) ? [$media_path] : [];
+                    $result = $this->x_model->post_to_x($credentials, $message, $media);
+                    break;
+                
+                case 'linkedin':
+                    $result = $this->linkedin_model->post_to_linkedin($connection, $message, $link, $media_path);
+                    break;
+                
+                case 'tumblr':
+                    // Validate Tumblr credentials
+                    if (!isset($connection->consumer_key) || !isset($connection->consumer_secret) || 
+                        !isset($connection->oauth_token) || !isset($connection->oauth_token_secret) ||
+                        !isset($connection->account_id)) {
+                        return [
+                            'success' => false,
+                            'post_id' => null,
+                            'error' => 'Missing required Tumblr credentials'
+                        ];
+                    }
+                    
+                    // Build credentials array
+                    $credentials = [
+                        'consumer_key' => $connection->consumer_key,
+                        'consumer_secret' => $connection->consumer_secret,
+                        'oauth_token' => $connection->oauth_token,
+                        'oauth_token_secret' => $connection->oauth_token_secret,
+                        'blog_name' => $connection->account_id
+                    ];
+                    
+                    // Prepare media array
+                    $media = !empty($media_path) ? [$media_path] : [];
+                    
+                    $result = $this->tumblr_model->post_to_tumblr($credentials, $message, $media);
+                    break;
+                
+                case 'pinterest':
+                    $result = $this->pinterest_model->post_to_pinterest($connection, $message, $link, $media_path);
+                    break;
+                
+                default:
                     return [
                         'success' => false,
                         'post_id' => null,
-                        'error' => 'Missing required X credentials (api_key, api_secret, access_token, access_token_secret)'
+                        'error' => 'Unknown platform: ' . $platform
                     ];
-                }
-                
-                $credentials = [
-                    'api_key' => $connection->api_key,
-                    'api_secret' => $connection->api_secret,
-                    'access_token' => $connection->access_token,
-                    'access_token_secret' => $connection->access_token_secret
-                ];
-                
-                $media = !empty($media_path) ? [$media_path] : [];
-                $result = $this->x_model->post_to_x($credentials, $message, $media);
-                break;
+            }
             
-            case 'linkedin':
-                $result = $this->linkedin_model->post_to_linkedin($connection, $message, $link, $media_path);
-                break;
-            
-            case 'tumblr':
-                $result = $this->tumblr_model->post_to_tumblr($connection, $message, $media_path);
-                break;
-            
-            case 'pinterest':
-                $result = $this->pinterest_model->post_to_pinterest($connection, $message, $link, $media_path);
-                break;
-            
-            default:
+            // Normalize response format
+            if (isset($result['success'])) {
                 return [
-                    'success' => false,
-                    'post_id' => null,
-                    'error' => 'Unknown platform: ' . $platform
+                    'success' => $result['success'],
+                    'post_id' => isset($result['post_id']) ? $result['post_id'] : null,
+                    'error' => !$result['success'] ? (
+                        isset($result['error']) ? $result['error'] : (
+                            isset($result['message']) ? $result['message'] : 'Unknown error'
+                        )
+                    ) : null
                 ];
-        }
-        
-        // Normalize response format across all platforms
-        // Some platforms return 'message' key, others 'error', standardize here
-        if (isset($result['success'])) {
+            }
+            
             return [
-                'success' => $result['success'],
-                'post_id' => isset($result['post_id']) ? $result['post_id'] : null,
-                'error' => !$result['success'] ? (
-                    isset($result['error']) ? $result['error'] : (
-                        isset($result['message']) ? $result['message'] : 'Unknown error'
-                    )
-                ) : null
+                'success' => false,
+                'post_id' => null,
+                'error' => 'Invalid response format: ' . json_encode($result)
+            ];
+            
+        } catch (Exception $e) {
+            log_message('error', '[SM_POSTERS] Exception: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'post_id' => null,
+                'error' => 'Exception: ' . $e->getMessage()
             ];
         }
-        
-        // Fallback if result format is unexpected
-        return [
-            'success' => false,
-            'post_id' => null,
-            'error' => 'Invalid response format from platform model: ' . json_encode($result)
-        ];
-        
-    } catch (Exception $e) {
-        log_message('error', '[SM_POSTERS] Exception in _post_to_platform: ' . $e->getMessage());
-        return [
-            'success' => false,
-            'post_id' => null,
-            'error' => 'Exception: ' . $e->getMessage()
-        ];
     }
-}
 
     /**
      * Create temporary file from base64
-     * 
-     * @param string $base64_data
-     * @param string $mime_type
-     * @param string $filename
-     * @return string File path
      */
     private function _create_temp_file($base64_data, $mime_type, $filename)
     {
@@ -702,11 +704,10 @@ private function _post_to_platform($platform, $connection, $message, $link = nul
     }
 
     /**
-     * Process scheduled posts (called by cron via web)
+     * Process scheduled posts (cron)
      */
     public function process_scheduled()
     {
-        // Security: Check secret key
         $secret = $this->input->get('secret');
         $expected_secret = 'sm_posters_cron_' . md5(APP_ENCRYPTION_KEY . 'sm_posters');
         
@@ -715,7 +716,6 @@ private function _post_to_platform($platform, $connection, $message, $link = nul
             return;
         }
 
-        // Prevent timeout
         set_time_limit(0);
         
         echo "<pre>";
@@ -724,7 +724,6 @@ private function _post_to_platform($platform, $connection, $message, $link = nul
         echo "Started at: " . date('Y-m-d H:i:s') . "\n";
         echo "========================================\n\n";
 
-        // Run the cron job from model
         $stats = $this->sm_posters_model->run_scheduled_posts_cron();
 
         echo "Posts scanned: {$stats['scanned']}\n";
@@ -734,201 +733,202 @@ private function _post_to_platform($platform, $connection, $message, $link = nul
         echo "Skipped: {$stats['skipped']}\n";
 
         echo "\n========================================\n";
-        echo "Cron job completed at: " . date('Y-m-d H:i:s') . "\n";
+        echo "Completed at: " . date('Y-m-d H:i:s') . "\n";
         echo "========================================\n";
         echo "</pre>";
     }
 
     /**
-     * Test cron manually (admins only)
+     * Test Tumblr upload
      */
-    public function test_cron()
-    {
-        if (!is_admin()) {
-            show_404();
-        }
-
-        echo "<pre>";
-        echo "Testing Cron Job...\n";
-        echo "==================\n\n";
-
-        $scheduled_posts = $this->sm_posters_model->get_due_posts();
-        
-        echo "Found " . count($scheduled_posts) . " scheduled posts\n\n";
-        
-        if (empty($scheduled_posts)) {
-            echo "No posts to process.\n";
-            echo "\nCreate a scheduled post with a past date/time to test.\n";
-            echo "</pre>";
-            return;
-        }
-
-        foreach ($scheduled_posts as $post) {
-            echo "Post ID: {$post->id}\n";
-            echo "Message: " . substr($post->message, 0, 50) . "...\n";
-            echo "Scheduled: {$post->scheduled_at}\n";
-            echo "Status: {$post->status}\n\n";
-        }
-
-        echo "\nTo process these posts, run the cron URL with the secret parameter.\n";
-        echo "</pre>";
-    }
-
     /**
- * Check specific post details
+ * Test Tumblr OAuth Credentials
  */
-public function check_instagram_post($media_id)
+public function test_tumblr_auth()
 {
     if (!is_admin()) {
         show_404();
     }
     
-    $connection = $this->sm_posters_model->get_connection('instagram', 1);
+    $connection = $this->sm_posters_model->get_connection('tumblr', 1);
+    print_r($connection);
+    
+    echo "<h2>🔐 Tumblr OAuth Test</h2>";
+    echo "<div style='padding:20px; background:#f5f5f5; font-family:monospace;'>";
     
     if (!$connection) {
-        echo "No connection";
+        echo "<p style='color:red;'>❌ No connection found!</p>";
+        echo "</div>";
         return;
     }
     
-    echo "<h2>📸 Instagram Post Details</h2>";
+    echo "<h3>📊 Current Settings:</h3>";
+    echo "<table border='1' cellpadding='10' style='border-collapse:collapse;'>";
+    echo "<tr><td>Blog Name</td><td><strong>" . $connection->account_id . "</strong></td></tr>";
+    echo "<tr><td>Consumer Key</td><td>" . substr($connection->consumer_key, 0, 20) . "...</td></tr>";
+    echo "<tr><td>Consumer Secret</td><td>" . substr($connection->consumer_secret, 0, 20) . "...</td></tr>";
+    echo "<tr><td>OAuth Token</td><td>" . substr($connection->oauth_token, 0, 20) . "...</td></tr>";
+    echo "<tr><td>OAuth Token Secret</td><td>" . substr($connection->oauth_token_secret, 0, 20) . "...</td></tr>";
+    echo "</table>";
     
-    // Get detailed post info
-    $url = 'https://graph.facebook.com/v18.0/' . $media_id . '?fields=id,media_type,media_url,thumbnail_url,permalink,caption,timestamp,like_count,comments_count,is_comment_enabled,media_product_type&access_token=' . $connection->access_token;
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    echo "<h3>API Response (HTTP {$http_code}):</h3>";
-    echo "<pre>" . htmlspecialchars($response) . "</pre>";
-    
-    $result = json_decode($response, true);
-    
-    if (isset($result['permalink'])) {
-        echo "<div style='background: #d4edda; padding: 20px; margin: 20px 0; border-radius: 5px;'>";
-        echo "<h3>✅ Post Found!</h3>";
-        echo "<strong>Post ID:</strong> " . $result['id'] . "<br>";
-        echo "<strong>Type:</strong> " . $result['media_type'] . "<br>";
-        echo "<strong>Posted:</strong> " . $result['timestamp'] . "<br>";
-        echo "<strong>Product Type:</strong> " . ($result['media_product_type'] ?? 'N/A') . "<br>";
-        echo "<br>";
-        echo "<strong>🔗 Direct Link:</strong> <a href='" . $result['permalink'] . "' target='_blank' style='color: blue; font-size: 18px;'>" . $result['permalink'] . "</a><br>";
-        echo "<br>";
+    // Check blog name format
+    echo "<br><h3>🔍 Blog Name Check:</h3>";
+    if (strpos($connection->account_id, 'www.') === 0) {
+        echo "<p style='color:red; font-size:18px;'>❌ REMOVE 'www.' PREFIX!</p>";
+        $correct = str_replace('www.', '', $connection->account_id);
+        echo "<p>Current: <code style='color:red;'>" . $connection->account_id . "</code></p>";
+        echo "<p>Should be: <code style='color:green;'>" . $correct . "</code></p>";
         
-        if (isset($result['media_url'])) {
-            echo "<img src='" . $result['media_url'] . "' style='max-width: 300px; border: 2px solid #ddd; border-radius: 5px;'>";
-        }
-        
-        echo "</div>";
-        
-        echo "<div style='background: #fff3cd; padding: 15px; border-radius: 5px;'>";
-        echo "<strong>⚠️ If you can't see this on your profile:</strong><br>";
-        echo "1. The post may be pending review by Instagram<br>";
-        echo "2. Your account might need to be verified<br>";
-        echo "3. The post might be in 'Content you shared' instead of main feed<br>";
-        echo "4. Try clicking the permalink above to view it directly<br>";
-        echo "</div>";
-    }
-}
-
-
-    public function debug_instagram()
-{
-    if (!is_admin()) {
-        show_404();
-    }
-    
-    // Get your Instagram connection
-    $connection = $this->sm_posters_model->get_connection('instagram', 1);
-    
-    if (!$connection) {
-        echo "<h2>❌ No Instagram connection found</h2>";
-        return;
-    }
-    
-    echo "<h2>🔍 Instagram Connection Debug</h2>";
-    echo "<div style='background: #f5f5f5; padding: 20px; border-radius: 5px; font-family: monospace;'>";
-    
-    echo "<h3>Database Info:</h3>";
-    echo "<strong>Account ID:</strong> " . $connection->account_id . "<br>";
-    echo "<strong>Account Name:</strong> " . $connection->account_name . "<br>";
-    echo "<strong>Client:</strong> " . ($connection->company ?? 'N/A') . "<br>";
-    echo "<br>";
-    
-    // Get actual Instagram account info from API
-    $url = 'https://graph.facebook.com/v18.0/' . $connection->account_id . '?fields=id,username,name,profile_picture_url&access_token=' . $connection->access_token;
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    
-    $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    echo "<h3>API Response (HTTP {$http_code}):</h3>";
-    echo "<pre>" . htmlspecialchars($response) . "</pre>";
-    
-    $result = json_decode($response, true);
-    
-    if (isset($result['username'])) {
-        echo "<div style='background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;'>";
-        echo "<h3>✅ Connected Instagram Account:</h3>";
-        echo "<strong>Username:</strong> @" . $result['username'] . "<br>";
-        echo "<strong>Name:</strong> " . $result['name'] . "<br>";
-        echo "<strong>Account ID:</strong> " . $result['id'] . "<br>";
-        echo "<br>";
-        echo "<strong>🔗 View Profile:</strong> <a href='https://instagram.com/" . $result['username'] . "' target='_blank'>https://instagram.com/" . $result['username'] . "</a><br>";
-        echo "</div>";
-        
-        // Get recent media
-        echo "<h3>Recent Posts:</h3>";
-        $media_url = 'https://graph.facebook.com/v18.0/' . $connection->account_id . '/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&access_token=' . $connection->access_token;
-        
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $media_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        
-        $media_response = curl_exec($ch);
-        curl_close($ch);
-        
-        $media_result = json_decode($media_response, true);
-        
-        if (isset($media_result['data']) && count($media_result['data']) > 0) {
-            echo "<table border='1' cellpadding='10' style='border-collapse: collapse; width: 100%;'>";
-            echo "<tr><th>Post ID</th><th>Caption</th><th>Type</th><th>Posted</th><th>Link</th></tr>";
-            
-            foreach ($media_result['data'] as $post) {
-                echo "<tr>";
-                echo "<td>" . $post['id'] . "</td>";
-                echo "<td>" . substr($post['caption'] ?? 'N/A', 0, 50) . "...</td>";
-                echo "<td>" . $post['media_type'] . "</td>";
-                echo "<td>" . date('Y-m-d H:i', strtotime($post['timestamp'])) . "</td>";
-                echo "<td><a href='" . $post['permalink'] . "' target='_blank'>View</a></td>";
-                echo "</tr>";
-            }
-            
-            echo "</table>";
-        } else {
-            echo "<p>No posts found or error: <pre>" . htmlspecialchars($media_response) . "</pre></p>";
-        }
-        
+        echo "<h4>Run this SQL:</h4>";
+        echo "<textarea style='width:100%; height:80px; font-family:monospace; padding:10px;' readonly>";
+        echo "UPDATE tbtumblr_connections\nSET account_id = '{$correct}'\nWHERE id = 1;";
+        echo "</textarea>";
+    } elseif (strpos($connection->account_id, '.tumblr.com') !== false) {
+        echo "<p style='color:green; font-size:18px;'>✅ Blog name format correct!</p>";
     } else {
-        echo "<div style='background: #f8d7da; padding: 15px; border-radius: 5px;'>";
-        echo "<h3>❌ Error:</h3>";
-        echo "<pre>" . htmlspecialchars($response) . "</pre>";
+        echo "<p style='color:orange; font-size:18px;'>⚠️ Unusual format</p>";
+    }
+    
+    // Test OAuth connection
+    echo "<br><h3>🧪 Testing OAuth Connection...</h3>";
+    
+    require_once(FCPATH . 'vendor/autoload.php');
+    
+    try {
+        $client = new \Tumblr\API\Client(
+            $connection->consumer_key,
+            $connection->consumer_secret,
+            $connection->oauth_token,
+            $connection->oauth_token_secret
+        );
+        
+        // Test 1: Get user info
+        echo "<h4>Test 1: User Info</h4>";
+        try {
+            $user_info = $client->getUserInfo();
+            
+            if (isset($user_info->user)) {
+                echo "<div style='background:#d4edda; padding:15px; border-radius:5px;'>";
+                echo "✅ OAuth credentials are valid!<br>";
+                echo "Username: <strong>" . $user_info->user->name . "</strong><br>";
+                echo "Blogs: " . count($user_info->user->blogs) . "<br><br>";
+                
+                echo "<strong>Your blogs:</strong><ul>";
+                foreach ($user_info->user->blogs as $blog) {
+                    echo "<li>" . $blog->name . " (" . $blog->url . ")";
+                    if ($blog->name == str_replace('.tumblr.com', '', $connection->account_id)) {
+                        echo " <span style='color:green;'>← THIS ONE</span>";
+                    }
+                    echo "</li>";
+                }
+                echo "</ul>";
+                echo "</div>";
+            } else {
+                echo "<div style='background:#f8d7da; padding:15px; border-radius:5px;'>";
+                echo "❌ Failed to get user info<br>";
+                echo "Response: <pre>" . print_r($user_info, true) . "</pre>";
+                echo "</div>";
+            }
+        } catch (Exception $e) {
+            echo "<div style='background:#f8d7da; padding:15px; border-radius:5px;'>";
+            echo "❌ OAuth Error: " . $e->getMessage();
+            echo "</div>";
+        }
+        
+        // Test 2: Get blog info
+        echo "<br><h4>Test 2: Blog Info</h4>";
+        $blog_name = str_replace('www.', '', $connection->account_id);
+        
+        try {
+            $blog_info = $client->getBlogInfo($blog_name);
+            
+            if (isset($blog_info->blog)) {
+                echo "<div style='background:#d4edda; padding:15px; border-radius:5px;'>";
+                echo "✅ Blog found and accessible!<br>";
+                echo "Blog Name: <strong>" . $blog_info->blog->name . "</strong><br>";
+                echo "Title: " . $blog_info->blog->title . "<br>";
+                echo "Posts: " . $blog_info->blog->posts . "<br>";
+                echo "URL: " . $blog_info->blog->url . "<br>";
+                echo "</div>";
+            } else {
+                echo "<div style='background:#f8d7da; padding:15px; border-radius:5px;'>";
+                echo "❌ Blog not found or not accessible<br>";
+                echo "Response: <pre>" . print_r($blog_info, true) . "</pre>";
+                echo "</div>";
+            }
+        } catch (Exception $e) {
+            echo "<div style='background:#f8d7da; padding:15px; border-radius:5px;'>";
+            echo "❌ Blog Error: " . $e->getMessage() . "<br>";
+            echo "Make sure the blog name is correct: <code>" . $blog_name . "</code>";
+            echo "</div>";
+        }
+        
+    } catch (Exception $e) {
+        echo "<div style='background:#f8d7da; padding:15px; border-radius:5px;'>";
+        echo "❌ Client Error: " . $e->getMessage();
         echo "</div>";
     }
+    
+    echo "<br><h3>📝 Next Steps:</h3>";
+    echo "<ol>";
+    echo "<li>Fix blog name if shown in red above</li>";
+    echo "<li>Make sure OAuth credentials belong to the same Tumblr account as the blog</li>";
+    echo "<li>Verify app has 'Write' permissions in Tumblr Developer Dashboard</li>";
+    echo "<li>Try generating new OAuth tokens if issues persist</li>";
+    echo "</ol>";
     
     echo "</div>";
 }
 
-
+    /**
+     * Debug Instagram
+     */
+    public function debug_instagram()
+    {
+        if (!is_admin()) {
+            show_404();
+        }
+        
+        $connection = $this->sm_posters_model->get_connection('instagram', 1);
+        
+        if (!$connection) {
+            echo "<h2>❌ No Instagram connection found</h2>";
+            return;
+        }
+        
+        echo "<h2>🔍 Instagram Connection Debug</h2>";
+        echo "<div style='background: #f5f5f5; padding: 20px; border-radius: 5px;'>";
+        
+        echo "<h3>Database Info:</h3>";
+        echo "Account ID: " . $connection->account_id . "<br>";
+        echo "Account Name: " . $connection->account_name . "<br><br>";
+        
+        // Get account info from API
+        $url = 'https://graph.facebook.com/v18.0/' . $connection->account_id . '?fields=id,username,name&access_token=' . $connection->access_token;
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        echo "<h3>API Response (HTTP {$http_code}):</h3>";
+        echo "<pre>" . htmlspecialchars($response) . "</pre>";
+        
+        $result = json_decode($response, true);
+        
+        if (isset($result['username'])) {
+            echo "<div style='background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;'>";
+            echo "<h3>✅ Connected Instagram Account:</h3>";
+            echo "Username: @" . $result['username'] . "<br>";
+            echo "Name: " . $result['name'] . "<br>";
+            echo "Profile: <a href='https://instagram.com/" . $result['username'] . "' target='_blank'>View</a>";
+            echo "</div>";
+        }
+        
+        echo "</div>";
+    }
 }
