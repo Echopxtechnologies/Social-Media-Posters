@@ -729,7 +729,27 @@ class Sm_posters_model extends App_Model
                     return $CI->instagram_model->post_to_instagram($connection, $message, $media_path);
                 
                 case 'x':
-                    return $CI->x_model->post_to_x($connection, $message, $media_path);
+                    if (!isset($connection->api_key) || !isset($connection->api_secret) ||
+                        !isset($connection->access_token) || !isset($connection->access_token_secret)) {
+                        return [
+                            'success' => false,
+                            'post_id' => null,
+                            'error' => 'Missing required X credentials'
+                        ];
+                    }
+
+                    $credentials = [
+                        'api_key' => $connection->api_key,
+                        'api_secret' => $connection->api_secret,
+                        'access_token' => $connection->access_token,
+                        'access_token_secret' => $connection->access_token_secret
+                    ];
+
+                    $media = !empty($media_path) ? [$media_path] : [];
+
+                    // FIX: Use $CI->x_model instead of $this->x_model
+                    return $CI->x_model->post_to_x($credentials, $message, $media);
+
                 
                 case 'linkedin':
                     return $CI->linkedin_model->post_to_linkedin($connection, $message, $link, $media_path);
